@@ -21,7 +21,7 @@ import math
 import statistics
 import numpy as np
 
-from svm import SVM
+from svm_model import SVM
 from rl_model3 import DDPGAgent
 
 

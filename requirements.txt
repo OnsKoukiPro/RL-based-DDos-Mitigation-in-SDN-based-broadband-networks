@@ -1,0 +1,5 @@
+numpy
+scikit-learn
+matplotlib
+tensorflow
+# controller side (Linux): ryu, mininet, openvswitch, hping3
