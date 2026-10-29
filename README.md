@@ -1,60 +1,49 @@
-# RL-based DDoS Detection & Mitigation in SDN
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/OnsKoukiPro/RL-based-DDos-Mitigation-in-SDN-based-broadband-networks/master/.github/assets/banner-dark.svg?v=r1"><img src="https://raw.githubusercontent.com/OnsKoukiPro/RL-based-DDos-Mitigation-in-SDN-based-broadband-networks/master/.github/assets/banner-light.svg?v=r1" alt="RL × SDN: a software-defined network that watches its own flow tables and learns when to drop a flood" width="100%"></picture>
 
-Research prototype: detect and mitigate ICMP-flood DDoS attacks in a software-defined network. A Ryu OpenFlow 1.3 controller polls flow statistics from the switches, extracts traffic features, and decides whether to block. The decision comes from either a supervised classifier or a reinforcement-learning agent.
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/OnsKoukiPro/RL-based-DDos-Mitigation-in-SDN-based-broadband-networks/master/.github/assets/stats-dark.svg?v=r1"><img src="https://raw.githubusercontent.com/OnsKoukiPro/RL-based-DDos-Mitigation-in-SDN-based-broadband-networks/master/.github/assets/stats-light.svg?v=r1" alt="94.6% accuracy with a decision tree, 0.997 precision, 3 flow features, 3 second polling loop" width="100%"></picture>
 
-## How it works
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/OnsKoukiPro/RL-based-DDos-Mitigation-in-SDN-based-broadband-networks/master/.github/assets/s1-dark.svg?v=r1"><img src="https://raw.githubusercontent.com/OnsKoukiPro/RL-based-DDos-Mitigation-in-SDN-based-broadband-networks/master/.github/assets/s1-light.svg?v=r1" alt="01 / Control loop: watch, decide, drop" width="100%"></picture>
 
-```
- Mininet topology (2 OVS switches, hosts h1..hN)
-        │  OpenFlow 1.3 flow-stats every 3 s
-        ▼
- Ryu controller ──► feature extraction ──► detector ──► mitigation
-                    SFE  speed of flow entries      DecisionTree / SVM   drop rule on
-                    SSIP speed of source IPs        Q-learning agent     ingress port
-                    RFIP ratio of pair-flows        DDPG agent (exp.)    (120 s hard timeout)
-```
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/OnsKoukiPro/RL-based-DDos-Mitigation-in-SDN-based-broadband-networks/master/.github/assets/loop-dark.svg?v=r1"><img src="https://raw.githubusercontent.com/OnsKoukiPro/RL-based-DDos-Mitigation-in-SDN-based-broadband-networks/master/.github/assets/loop-light.svg?v=r1" alt="Control loop: Mininet switches report flow stats to the Ryu controller every 3 s; features feed a detector whose decision installs a drop rule" width="100%"></picture>
 
-- **Traffic generation**: `normal-traffic.sh` (benign pings between hosts), `attack-traffic.sh` (`hping3 --rand-source` ICMP floods at varying rates).
-- **Data collection**: run the controller with `APP_TYPE = 0` to log `sfe, ssip, rfip, label` rows into `result.csv`.
-- **Detection**:
-  - `normal-traffic-detection.py`, `attack-traffic-detection.py`: supervised baseline (`svm_model.py`, Decision Tree / SVM)
-  - `m_attack_rl.py` + `rl_model2.py`: tabular Q-learning agent (ε-greedy, actions allow/block)
-  - `m_attack_rl2.py` + `rl_model3.py`: DDPG actor-critic agent (continuous action, Ornstein-Uhlenbeck exploration)
-- **Analysis**: `perf_analysis.py` computes TP/FP/TN/FN and plots flow count against detections.
+A Ryu OpenFlow 1.3 controller polls flow statistics every 3 s and turns them into three cheap features: **SFE** (speed of flow entries), **SSIP** (speed of source IPs) and **RFIP** (ratio of pair flows). A supervised classifier or an RL agent (tabular Q-learning, DDPG) decides, and the controller installs a drop rule on the ingress port.
 
-## Results: supervised baseline
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/OnsKoukiPro/RL-based-DDos-Mitigation-in-SDN-based-broadband-networks/master/.github/assets/s2-dark.svg?v=r1"><img src="https://raw.githubusercontent.com/OnsKoukiPro/RL-based-DDos-Mitigation-in-SDN-based-broadband-networks/master/.github/assets/s2-light.svg?v=r1" alt="02 / Data: floods stand out" width="100%"></picture>
 
-Run `python evaluate_baseline.py` for 5-fold stratified CV on the 3,580 collected samples (1,515 attack / 2,065 normal):
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/OnsKoukiPro/RL-based-DDos-Mitigation-in-SDN-based-broadband-networks/master/.github/assets/scatter-dark.svg?v=r1"><img src="https://raw.githubusercontent.com/OnsKoukiPro/RL-based-DDos-Mitigation-in-SDN-based-broadband-networks/master/.github/assets/scatter-light.svg?v=r1" alt="Scatter of 3,580 polling windows: normal traffic stays small, ICMP floods spread over four orders of magnitude" width="100%"></picture>
 
-| Model | Accuracy | Precision | Recall | F1 |
-|---|---|---|---|---|
-| Decision Tree | 0.946 | 0.997 | 0.875 | 0.932 |
-| SVM (RBF) | 0.844 | 1.000 | 0.630 | 0.773 |
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/OnsKoukiPro/RL-based-DDos-Mitigation-in-SDN-based-broadband-networks/master/.github/assets/s3-dark.svg?v=r1"><img src="https://raw.githubusercontent.com/OnsKoukiPro/RL-based-DDos-Mitigation-in-SDN-based-broadband-networks/master/.github/assets/s3-light.svg?v=r1" alt="03 / Results: how well it blocks" width="100%"></picture>
 
-Three cheap flow-table features are enough to separate the attack traffic with very few false positives. Recall is the weak point.
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/OnsKoukiPro/RL-based-DDos-Mitigation-in-SDN-based-broadband-networks/master/.github/assets/bars-dark.svg?v=r1"><img src="https://raw.githubusercontent.com/OnsKoukiPro/RL-based-DDos-Mitigation-in-SDN-based-broadband-networks/master/.github/assets/bars-light.svg?v=r1" alt="Decision tree vs SVM: accuracy 0.946 vs 0.844, precision 0.997 vs 1.000, recall 0.875 vs 0.630, F1 0.932 vs 0.773" width="100%"></picture>
 
-## Run
+Supervised baseline, 5-fold stratified CV on 3,580 samples (1,515 attack, 2,065 normal): `python evaluate_baseline.py`. Very few false positives; recall is the weak point.
 
-Requires Linux with Mininet, Open vSwitch, Ryu and hping3.
+<details>
+<summary><b>Files</b></summary>
+
+| What | Files |
+|---|---|
+| Traffic | `normal-traffic.sh` (benign pings), `attack-traffic.sh` (`hping3 --rand-source` ICMP floods) |
+| Data collection | controller with `APP_TYPE = 0` logs `sfe, ssip, rfip, label` to `result.csv` |
+| Supervised | `normal-traffic-detection.py`, `attack-traffic-detection.py`, `svm_model.py` |
+| Q-learning | `m_attack_rl.py` + `rl_model2.py` (ε-greedy, allow/block) |
+| DDPG | `m_attack_rl2.py` + `rl_model3.py` (actor-critic, Ornstein-Uhlenbeck exploration) |
+| Analysis | `perf_analysis.py` (TP/FP/TN/FN, flow count vs detections) |
+
+</details>
+
+<details>
+<summary><b>Run it</b></summary>
+
+Linux with Mininet, Open vSwitch, Ryu and hping3.
 
 ```bash
-# terminal 1: controller
-ryu-manager attack-traffic-detection.py      # or m_attack_rl.py for the RL agent
+ryu-manager attack-traffic-detection.py      # terminal 1, or m_attack_rl.py for the RL agent
+sudo python2 attack-traffic-topo.py && sudo mn -c    # terminal 2
 
-# terminal 2: topology + traffic
-sudo python2 attack-traffic-topo.py && sudo mn -c
-
-# offline evaluation
-pip install -r requirements.txt
-python evaluate_baseline.py
+pip install -r requirements.txt && python evaluate_baseline.py   # offline evaluation
 ```
 
-## Status & next steps
+</details>
 
-- The RL agents run online in the controller, but the reward still uses the agent's own mitigation flag. The next step is to compute it from the generator's ground-truth labels, then benchmark against the supervised baseline.
-- Enable the port-blocking call in the RL controller once the reward is fixed.
-- Larger topology and mixed attack types (SYN, UDP floods).
-
-## Stack
-
-Python, Ryu (OpenFlow 1.3), Mininet, Open vSwitch, scikit-learn, TensorFlow/Keras, hping3.
+**Next:** compute the RL reward from the generator's ground-truth labels instead of the agent's own mitigation flag, then benchmark it against the baseline; turn on port blocking in the RL controller; larger topology and SYN/UDP floods.
